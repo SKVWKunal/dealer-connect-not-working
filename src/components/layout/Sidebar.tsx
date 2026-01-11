@@ -83,7 +83,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       path: '/workshop-survey',
       label: 'Workshop Survey',
       icon: <FileSpreadsheet className="h-5 w-5" />,
-      moduleKey: 'workshop_survey'
+      moduleKey: 'workshop_survey',
+      roles: ['master_technician', 'service_manager', 'service_head', 'warranty_manager', 'admin', 'super_admin']
     },
     {
       path: '/warranty-survey',
