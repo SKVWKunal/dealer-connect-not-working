@@ -68,8 +68,6 @@ export default function WorkshopSurveyDashboard() {
     a.download = 'workshop-survey-export.csv';
     a.click();
   };
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
