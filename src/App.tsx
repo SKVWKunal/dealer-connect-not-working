@@ -21,6 +21,8 @@ import ModuleManagement from "./pages/admin/ModuleManagement";
 import AuditLogs from "./pages/admin/AuditLogs";
 import FeatureUnavailable from "./pages/FeatureUnavailable";
 import NotFound from "./pages/NotFound";
+import WorkshopSurvey from "./pages/survey/WorkshopSurvey";
+import WorkshopSurveyDashboard from "./pages/survey/WorkshopSurveyDashboard";
 
 const queryClient = new QueryClient();
 
@@ -93,7 +95,19 @@ const App = () => {
                   
                   <Route path="workshop-survey" element={
                     <ProtectedRoute moduleKey="workshop_survey">
-                      <FeatureUnavailable />
+                      <WorkshopSurveyDashboard />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="workshop-survey/submit" element={
+                    <ProtectedRoute moduleKey="workshop_survey">
+                      <WorkshopSurvey />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="workshop-survey/dashboard" element={
+                    <ProtectedRoute moduleKey="workshop_survey">
+                      <WorkshopSurveyDashboard />
                     </ProtectedRoute>
                   } />
                   
