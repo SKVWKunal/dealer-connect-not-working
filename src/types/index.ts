@@ -55,6 +55,29 @@ export type Brand = 'volkswagen' | 'skoda';
 export type PCCTopic = 'dealer_pcc' | 'long_term_pcc';
 export type PCCSubtopic = 'engine' | 'transmission' | 'electrical' | 'suspension' | 'brakes' | 'body' | 'interior' | 'other';
 
+// PCC Condition Types based on acceptance criteria
+export type PCCConditionType = 
+  | 'warranty_cases'           // ≤ 2 years, ≥5 claims
+  | 'post_warranty_cases'      // > 2 years, ≥10 claims
+  | 'after_countermeasure'     // ≥3 claims post countermeasure
+  | 'new_model_launch'         // ≥3 claims ≤3 months from sale
+  | 'breakdown_cases'          // ≥3 claims with breakdown flag
+  | 'repeat_repairs'           // ≥2 claims, same VIN ≥2 repairs
+  | 'tpi_unavailable';         // TPI not available or repair unsuccessful
+
+export interface PCCAcceptanceCriteria {
+  conditionType: PCCConditionType;
+  warrantyPeriod: 'lte_2_years' | 'gt_2_years' | 'any';
+  minClaims: number | 'not_claim_based';
+  faultCode: string;
+  repairDateWindow: '3_months' | '6_months' | '3_or_6_months' | 'post_countermeasure' | 'from_sale_date' | 'no_limit';
+  countermeasureDate?: string;
+  saleDate?: string;
+  numberOfRepairs?: number;
+  tpiResult?: 0 | 1;
+  repairSuccess?: 0 | 1;
+}
+
 export interface PCCSubmission {
   id: string;
   referenceNumber: string;
@@ -73,6 +96,17 @@ export interface PCCSubmission {
   vin: string;
   registrationNo: string;
   productionDate: string;
+  
+  // Acceptance Criteria
+  conditionType: PCCConditionType;
+  warrantyPeriod: 'lte_2_years' | 'gt_2_years' | 'any';
+  numberOfClaims: number;
+  faultCode: string;
+  countermeasureDate?: string;
+  saleDate?: string;
+  numberOfRepairs?: number;
+  tpiResult?: 0 | 1;
+  repairSuccess?: 0 | 1;
   
   // Details & Classification
   topic: PCCTopic;

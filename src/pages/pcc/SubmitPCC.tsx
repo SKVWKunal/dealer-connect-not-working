@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { pccService } from '@/services/pcc';
-import { Brand, PCCTopic, PCCSubtopic } from '@/types';
+import { Brand, PCCTopic, PCCSubtopic, PCCConditionType } from '@/types';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +26,15 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, AlertCircle, Upload, X } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { CheckCircle, AlertCircle, Upload, X, Info } from 'lucide-react';
 import {
   isValidVIN,
   isValidRegistrationNo,
@@ -45,12 +53,44 @@ const MODELS = {
 
 const SUBTOPICS: PCCSubtopic[] = ['engine', 'transmission', 'electrical', 'suspension', 'brakes', 'body', 'interior', 'other'];
 
+// PCC Acceptance Criteria Configuration
+const CONDITION_TYPES: { value: PCCConditionType; label: string; description: string }[] = [
+  { value: 'warranty_cases', label: 'Warranty Cases', description: '≤ 2 years warranty period' },
+  { value: 'post_warranty_cases', label: 'Post-Warranty Cases', description: '> 2 years warranty period' },
+  { value: 'after_countermeasure', label: 'After Countermeasure', description: 'Cases after countermeasure applied' },
+  { value: 'new_model_launch', label: 'New Model Launch', description: '≤ 3 months from date of sale' },
+  { value: 'breakdown_cases', label: 'Breakdown Cases', description: 'Vehicle breakdown occurred' },
+  { value: 'repeat_repairs', label: 'Repeat Repairs', description: 'Same VIN with ≥ 2 repairs' },
+  { value: 'tpi_unavailable', label: 'TPI Not Available / Unsuccessful', description: 'TPI not available or repair unsuccessful' },
+];
+
+const ACCEPTANCE_CRITERIA = [
+  { srNo: 1, warrantyPeriod: '≤ 2 years', conditionType: 'Warranty cases', minClaims: '≥ 5', faultCode: '1 identical fault code across all claims', repairWindow: 'Last 3 or 6 months', additional: '—' },
+  { srNo: 2, warrantyPeriod: '> 2 years', conditionType: 'Post-warranty cases', minClaims: '≥ 10', faultCode: '1 identical fault code across all claims', repairWindow: 'Last 6 months', additional: '—' },
+  { srNo: 3, warrantyPeriod: 'Any', conditionType: 'After countermeasure', minClaims: '≥ 3', faultCode: '1 identical fault code across all claims', repairWindow: 'Post countermeasure date', additional: '—' },
+  { srNo: 4, warrantyPeriod: 'Any', conditionType: 'New model launch', minClaims: '≥ 3', faultCode: '1 identical fault code across all claims', repairWindow: '≤ 3 months from date of sale', additional: '—' },
+  { srNo: 5, warrantyPeriod: 'Any', conditionType: 'Breakdown cases', minClaims: '≥ 3', faultCode: '1 identical fault code across all claims', repairWindow: 'No limit', additional: 'Breakdown flag = Yes' },
+  { srNo: 6, warrantyPeriod: 'Any', conditionType: 'Repeat repairs', minClaims: '≥ 2', faultCode: '1 identical fault code', repairWindow: 'No limit', additional: 'Same VIN ≥ 2 repairs' },
+  { srNo: 7, warrantyPeriod: 'Any', conditionType: 'TPI not available / TPI repair unsuccessful', minClaims: 'Not claim-based', faultCode: 'As observed', repairWindow: 'No limit', additional: 'TPI result = 0 or repair success = 0' },
+];
+
 interface FormData {
   brand: Brand | '';
   model: string;
   vin: string;
   registrationNo: string;
   productionDate: string;
+  // Acceptance Criteria
+  conditionType: PCCConditionType | '';
+  warrantyPeriod: 'lte_2_years' | 'gt_2_years' | 'any' | '';
+  numberOfClaims: string;
+  faultCode: string;
+  countermeasureDate: string;
+  saleDate: string;
+  numberOfRepairs: string;
+  tpiResult: '' | '0' | '1';
+  repairSuccess: '' | '0' | '1';
+  // Other fields
   topic: PCCTopic;
   subtopic: PCCSubtopic | '';
   escalatedToBrand: boolean;
@@ -78,6 +118,15 @@ export default function SubmitPCC() {
     vin: '',
     registrationNo: '',
     productionDate: '',
+    conditionType: '',
+    warrantyPeriod: '',
+    numberOfClaims: '',
+    faultCode: '',
+    countermeasureDate: '',
+    saleDate: '',
+    numberOfRepairs: '',
+    tpiResult: '',
+    repairSuccess: '',
     topic: 'dealer_pcc',
     subtopic: '',
     escalatedToBrand: false,
@@ -101,9 +150,64 @@ export default function SubmitPCC() {
   const [showEscalationModal, setShowEscalationModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [submittedReference, setSubmittedReference] = useState('');
+  const [showCriteriaInfo, setShowCriteriaInfo] = useState(false);
+
+  // Get the required criteria based on condition type
+  const selectedCriteria = useMemo(() => {
+    const conditionMap: Record<PCCConditionType, typeof ACCEPTANCE_CRITERIA[0]> = {
+      warranty_cases: ACCEPTANCE_CRITERIA[0],
+      post_warranty_cases: ACCEPTANCE_CRITERIA[1],
+      after_countermeasure: ACCEPTANCE_CRITERIA[2],
+      new_model_launch: ACCEPTANCE_CRITERIA[3],
+      breakdown_cases: ACCEPTANCE_CRITERIA[4],
+      repeat_repairs: ACCEPTANCE_CRITERIA[5],
+      tpi_unavailable: ACCEPTANCE_CRITERIA[6],
+    };
+    return formData.conditionType ? conditionMap[formData.conditionType] : null;
+  }, [formData.conditionType]);
+
+  // Get minimum claims based on condition type
+  const getMinClaims = (conditionType: PCCConditionType): number => {
+    const minClaimsMap: Record<PCCConditionType, number> = {
+      warranty_cases: 5,
+      post_warranty_cases: 10,
+      after_countermeasure: 3,
+      new_model_launch: 3,
+      breakdown_cases: 3,
+      repeat_repairs: 2,
+      tpi_unavailable: 0,
+    };
+    return minClaimsMap[conditionType];
+  };
 
   const updateField = <K extends keyof FormData>(field: K, value: FormData[K]) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      
+      // Auto-set warranty period and breakdown flag based on condition type
+      if (field === 'conditionType') {
+        if (value === 'warranty_cases') {
+          newData.warrantyPeriod = 'lte_2_years';
+        } else if (value === 'post_warranty_cases') {
+          newData.warrantyPeriod = 'gt_2_years';
+        } else {
+          newData.warrantyPeriod = 'any';
+        }
+        
+        // Auto-set breakdown flag for breakdown cases
+        if (value === 'breakdown_cases') {
+          newData.breakdown = true;
+        }
+        
+        // Auto-set repeated repair for repeat repairs
+        if (value === 'repeat_repairs') {
+          newData.repeatedRepair = true;
+        }
+      }
+      
+      return newData;
+    });
+    
     // Clear error when field is updated
     if (errors[field]) {
       setErrors(prev => {
@@ -134,6 +238,68 @@ export default function SubmitPCC() {
       newErrors.productionDate = 'Production date is required';
     } else if (!isDateInPast(formData.productionDate)) {
       newErrors.productionDate = 'Production date must be in the past';
+    }
+
+    // Acceptance Criteria Validation
+    if (!formData.conditionType) {
+      newErrors.conditionType = 'Condition type is required';
+    } else {
+      const conditionType = formData.conditionType as PCCConditionType;
+      const minClaims = getMinClaims(conditionType);
+      
+      // Validate number of claims (except for TPI unavailable)
+      if (conditionType !== 'tpi_unavailable') {
+        if (!formData.numberOfClaims) {
+          newErrors.numberOfClaims = 'Number of claims is required';
+        } else if (!isPositiveInteger(formData.numberOfClaims)) {
+          newErrors.numberOfClaims = 'Must be a positive number';
+        } else if (parseInt(formData.numberOfClaims) < minClaims) {
+          newErrors.numberOfClaims = `Minimum ${minClaims} claims required for ${CONDITION_TYPES.find(c => c.value === conditionType)?.label}`;
+        }
+      }
+      
+      // Validate fault code
+      if (!formData.faultCode) {
+        newErrors.faultCode = 'Fault code is required';
+      }
+      
+      // Condition-specific validations
+      if (conditionType === 'after_countermeasure' && !formData.countermeasureDate) {
+        newErrors.countermeasureDate = 'Countermeasure date is required';
+      }
+      
+      if (conditionType === 'new_model_launch') {
+        if (!formData.saleDate) {
+          newErrors.saleDate = 'Sale date is required';
+        } else {
+          // Check if repair date is within 3 months of sale date
+          const saleDate = new Date(formData.saleDate);
+          const repairDate = formData.repairDate ? new Date(formData.repairDate) : new Date();
+          const threeMonthsLater = new Date(saleDate);
+          threeMonthsLater.setMonth(threeMonthsLater.getMonth() + 3);
+          if (repairDate > threeMonthsLater) {
+            newErrors.saleDate = 'Repair date must be within 3 months from sale date';
+          }
+        }
+      }
+      
+      if (conditionType === 'breakdown_cases' && !formData.breakdown) {
+        newErrors.breakdown = 'Breakdown flag must be Yes for breakdown cases';
+      }
+      
+      if (conditionType === 'repeat_repairs') {
+        if (!formData.numberOfRepairs) {
+          newErrors.numberOfRepairs = 'Number of repairs is required';
+        } else if (parseInt(formData.numberOfRepairs) < 2) {
+          newErrors.numberOfRepairs = 'Minimum 2 repairs required for the same VIN';
+        }
+      }
+      
+      if (conditionType === 'tpi_unavailable') {
+        if (formData.tpiResult !== '0' && formData.repairSuccess !== '0') {
+          newErrors.tpiResult = 'TPI result or repair success must be 0';
+        }
+      }
     }
 
     // Details
@@ -212,7 +378,7 @@ export default function SubmitPCC() {
     try {
       const submission = await pccService.create({
         dealerId: user?.dealerId || '',
-        dealerCode: 'DLR001', // Would come from user context
+        dealerCode: 'DLR001',
         dealerName: user?.dealerName || '',
         contactPerson: user?.name || '',
         email: user?.email || '',
@@ -221,6 +387,15 @@ export default function SubmitPCC() {
         vin: formData.vin.toUpperCase(),
         registrationNo: formData.registrationNo.toUpperCase(),
         productionDate: formData.productionDate,
+        conditionType: formData.conditionType as PCCConditionType,
+        warrantyPeriod: formData.warrantyPeriod as 'lte_2_years' | 'gt_2_years' | 'any',
+        numberOfClaims: parseInt(formData.numberOfClaims) || 0,
+        faultCode: formData.faultCode.toUpperCase(),
+        countermeasureDate: formData.countermeasureDate || undefined,
+        saleDate: formData.saleDate || undefined,
+        numberOfRepairs: formData.numberOfRepairs ? parseInt(formData.numberOfRepairs) : undefined,
+        tpiResult: formData.tpiResult ? (parseInt(formData.tpiResult) as 0 | 1) : undefined,
+        repairSuccess: formData.repairSuccess ? (parseInt(formData.repairSuccess) as 0 | 1) : undefined,
         topic: formData.topic,
         subtopic: formData.subtopic as PCCSubtopic,
         escalatedToBrand: formData.escalatedToBrand,
@@ -366,6 +541,196 @@ export default function SubmitPCC() {
                 />
                 {errors.productionDate && <p className="text-xs text-destructive">{errors.productionDate}</p>}
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* PCC Acceptance Criteria */}
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="form-section-title mb-0">PCC Acceptance Criteria</h3>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCriteriaInfo(true)}
+              >
+                <Info className="h-4 w-4 mr-1" />
+                View Criteria Table
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2 space-y-2">
+                <Label htmlFor="conditionType">Condition Type *</Label>
+                <Select 
+                  value={formData.conditionType} 
+                  onValueChange={(v) => updateField('conditionType', v as PCCConditionType)}
+                >
+                  <SelectTrigger className={errors.conditionType ? 'border-destructive' : ''}>
+                    <SelectValue placeholder="Select condition type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CONDITION_TYPES.map(ct => (
+                      <SelectItem key={ct.value} value={ct.value}>
+                        {ct.label} - {ct.description}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.conditionType && <p className="text-xs text-destructive">{errors.conditionType}</p>}
+              </div>
+
+              {selectedCriteria && (
+                <div className="md:col-span-2 p-3 bg-muted rounded-lg text-sm">
+                  <p className="font-medium mb-1">Requirements for {selectedCriteria.conditionType}:</p>
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                    <li>Warranty Period: {selectedCriteria.warrantyPeriod}</li>
+                    <li>Minimum Claims: {selectedCriteria.minClaims}</li>
+                    <li>Fault Code: {selectedCriteria.faultCode}</li>
+                    <li>Repair Date Window: {selectedCriteria.repairWindow}</li>
+                    {selectedCriteria.additional !== '—' && <li>Additional: {selectedCriteria.additional}</li>}
+                  </ul>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="warrantyPeriod">Warranty Period *</Label>
+                <Select 
+                  value={formData.warrantyPeriod} 
+                  onValueChange={(v) => updateField('warrantyPeriod', v as 'lte_2_years' | 'gt_2_years' | 'any')}
+                  disabled={formData.conditionType === 'warranty_cases' || formData.conditionType === 'post_warranty_cases'}
+                >
+                  <SelectTrigger className={errors.warrantyPeriod ? 'border-destructive' : ''}>
+                    <SelectValue placeholder="Select warranty period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lte_2_years">≤ 2 years</SelectItem>
+                    <SelectItem value="gt_2_years">&gt; 2 years</SelectItem>
+                    <SelectItem value="any">Any</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.warrantyPeriod && <p className="text-xs text-destructive">{errors.warrantyPeriod}</p>}
+              </div>
+
+              {formData.conditionType !== 'tpi_unavailable' && (
+                <div className="space-y-2">
+                  <Label htmlFor="numberOfClaims">
+                    Number of Claims * 
+                    {formData.conditionType && (
+                      <span className="text-muted-foreground ml-1">
+                        (Min: {getMinClaims(formData.conditionType as PCCConditionType)})
+                      </span>
+                    )}
+                  </Label>
+                  <Input
+                    id="numberOfClaims"
+                    type="number"
+                    value={formData.numberOfClaims}
+                    onChange={(e) => updateField('numberOfClaims', e.target.value)}
+                    placeholder="Enter number of claims"
+                    min="1"
+                    className={errors.numberOfClaims ? 'border-destructive' : ''}
+                  />
+                  {errors.numberOfClaims && <p className="text-xs text-destructive">{errors.numberOfClaims}</p>}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="faultCode">Fault Code *</Label>
+                <Input
+                  id="faultCode"
+                  value={formData.faultCode}
+                  onChange={(e) => updateField('faultCode', e.target.value.toUpperCase())}
+                  placeholder="e.g., P0299"
+                  className={errors.faultCode ? 'border-destructive' : ''}
+                />
+                {errors.faultCode && <p className="text-xs text-destructive">{errors.faultCode}</p>}
+              </div>
+
+              {formData.conditionType === 'after_countermeasure' && (
+                <div className="space-y-2">
+                  <Label htmlFor="countermeasureDate">Countermeasure Date *</Label>
+                  <Input
+                    id="countermeasureDate"
+                    type="date"
+                    value={formData.countermeasureDate}
+                    onChange={(e) => updateField('countermeasureDate', e.target.value)}
+                    max={new Date().toISOString().split('T')[0]}
+                    className={errors.countermeasureDate ? 'border-destructive' : ''}
+                  />
+                  {errors.countermeasureDate && <p className="text-xs text-destructive">{errors.countermeasureDate}</p>}
+                </div>
+              )}
+
+              {formData.conditionType === 'new_model_launch' && (
+                <div className="space-y-2">
+                  <Label htmlFor="saleDate">Sale Date *</Label>
+                  <Input
+                    id="saleDate"
+                    type="date"
+                    value={formData.saleDate}
+                    onChange={(e) => updateField('saleDate', e.target.value)}
+                    max={new Date().toISOString().split('T')[0]}
+                    className={errors.saleDate ? 'border-destructive' : ''}
+                  />
+                  {errors.saleDate && <p className="text-xs text-destructive">{errors.saleDate}</p>}
+                </div>
+              )}
+
+              {formData.conditionType === 'repeat_repairs' && (
+                <div className="space-y-2">
+                  <Label htmlFor="numberOfRepairs">Number of Repairs on Same VIN *</Label>
+                  <Input
+                    id="numberOfRepairs"
+                    type="number"
+                    value={formData.numberOfRepairs}
+                    onChange={(e) => updateField('numberOfRepairs', e.target.value)}
+                    placeholder="Minimum 2"
+                    min="2"
+                    className={errors.numberOfRepairs ? 'border-destructive' : ''}
+                  />
+                  {errors.numberOfRepairs && <p className="text-xs text-destructive">{errors.numberOfRepairs}</p>}
+                </div>
+              )}
+
+              {formData.conditionType === 'tpi_unavailable' && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="tpiResult">TPI Result</Label>
+                    <Select 
+                      value={formData.tpiResult} 
+                      onValueChange={(v) => updateField('tpiResult', v as '' | '0' | '1')}
+                    >
+                      <SelectTrigger className={errors.tpiResult ? 'border-destructive' : ''}>
+                        <SelectValue placeholder="Select TPI result" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">0 - Not Available</SelectItem>
+                        <SelectItem value="1">1 - Available</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.tpiResult && <p className="text-xs text-destructive">{errors.tpiResult}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="repairSuccess">Repair Success</Label>
+                    <Select 
+                      value={formData.repairSuccess} 
+                      onValueChange={(v) => updateField('repairSuccess', v as '' | '0' | '1')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select repair success" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">0 - Unsuccessful</SelectItem>
+                        <SelectItem value="1">1 - Successful</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -539,6 +904,7 @@ export default function SubmitPCC() {
                     id="repeatedRepair"
                     checked={formData.repeatedRepair}
                     onCheckedChange={(checked) => updateField('repeatedRepair', !!checked)}
+                    disabled={formData.conditionType === 'repeat_repairs'}
                   />
                   <Label htmlFor="repeatedRepair">Repeated Repair</Label>
                 </div>
@@ -547,8 +913,10 @@ export default function SubmitPCC() {
                     id="breakdown"
                     checked={formData.breakdown}
                     onCheckedChange={(checked) => updateField('breakdown', !!checked)}
+                    disabled={formData.conditionType === 'breakdown_cases'}
                   />
                   <Label htmlFor="breakdown">Breakdown</Label>
+                  {errors.breakdown && <span className="text-xs text-destructive">{errors.breakdown}</span>}
                 </div>
               </div>
             </div>
@@ -645,6 +1013,49 @@ export default function SubmitPCC() {
           </Button>
         </div>
       </form>
+
+      {/* Criteria Info Dialog */}
+      <Dialog open={showCriteriaInfo} onOpenChange={setShowCriteriaInfo}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>PCC Acceptance Criteria</DialogTitle>
+            <DialogDescription>
+              Reference table for Dealer PCC submission requirements
+            </DialogDescription>
+          </DialogHeader>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">Sr.</TableHead>
+                  <TableHead>Warranty Period</TableHead>
+                  <TableHead>Condition Type</TableHead>
+                  <TableHead>Min. Claims</TableHead>
+                  <TableHead>Fault Code Requirement</TableHead>
+                  <TableHead>Repair Date Window</TableHead>
+                  <TableHead>Additional</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ACCEPTANCE_CRITERIA.map((criteria) => (
+                  <TableRow key={criteria.srNo}>
+                    <TableCell className="font-medium">{criteria.srNo}</TableCell>
+                    <TableCell>{criteria.warrantyPeriod}</TableCell>
+                    <TableCell>{criteria.conditionType}</TableCell>
+                    <TableCell>{criteria.minClaims}</TableCell>
+                    <TableCell className="text-xs">{criteria.faultCode}</TableCell>
+                    <TableCell className="text-xs">{criteria.repairWindow}</TableCell>
+                    <TableCell className="text-xs">{criteria.additional}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowCriteriaInfo(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Escalation Notes Modal */}
       <Dialog open={showEscalationModal} onOpenChange={setShowEscalationModal}>
