@@ -22,7 +22,7 @@ export interface StorageService<T> {
   query(predicate: (item: T) => boolean): Promise<T[]>;
 }
 
-function createStorageService<T extends { id: string }>(key: string): StorageService<T> {
+export function createStorageService<T extends { id: string }>(key: string): StorageService<T> {
   const storageKey = `${STORAGE_PREFIX}${key}`;
 
   const getItems = (): T[] => {

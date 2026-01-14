@@ -23,6 +23,10 @@ import FeatureUnavailable from "./pages/FeatureUnavailable";
 import NotFound from "./pages/NotFound";
 import WorkshopSurvey from "./pages/survey/WorkshopSurvey";
 import WorkshopSurveyDashboard from "./pages/survey/WorkshopSurveyDashboard";
+import APIRegistration from "./pages/api/APIRegistration";
+import MTMeet from "./pages/mtmeet/MTMeet";
+import WarrantySurveyDashboard from "./pages/survey/WarrantySurveyDashboard";
+import TechnicalSurveyDashboard from "./pages/survey/TechnicalSurveyDashboard";
 
 const queryClient = new QueryClient();
 
@@ -80,46 +84,43 @@ const App = () => {
                     </ProtectedRoute>
                   } />
                   
-                  {/* Placeholder Routes for Feature-Flagged Modules */}
+                  {/* API Registration Module */}
                   <Route path="api-registration" element={
                     <ProtectedRoute moduleKey="api_registration">
-                      <FeatureUnavailable />
+                      <APIRegistration />
                     </ProtectedRoute>
                   } />
                   
+                  {/* MT Meet Module */}
                   <Route path="mt-meet" element={
                     <ProtectedRoute moduleKey="mt_meet">
-                      <FeatureUnavailable />
+                      <MTMeet />
                     </ProtectedRoute>
                   } />
                   
+                  {/* Workshop Survey Module */}
                   <Route path="workshop-survey" element={
                     <ProtectedRoute moduleKey="workshop_survey">
                       <WorkshopSurveyDashboard />
                     </ProtectedRoute>
                   } />
-                  
                   <Route path="workshop-survey/submit" element={
                     <ProtectedRoute moduleKey="workshop_survey">
                       <WorkshopSurvey />
                     </ProtectedRoute>
                   } />
                   
-                  <Route path="workshop-survey/dashboard" element={
-                    <ProtectedRoute moduleKey="workshop_survey">
-                      <WorkshopSurveyDashboard />
-                    </ProtectedRoute>
-                  } />
-                  
+                  {/* Warranty Survey Module */}
                   <Route path="warranty-survey" element={
                     <ProtectedRoute moduleKey="warranty_survey">
-                      <FeatureUnavailable />
+                      <WarrantySurveyDashboard />
                     </ProtectedRoute>
                   } />
                   
+                  {/* Technical Awareness Survey Module */}
                   <Route path="technical-survey" element={
                     <ProtectedRoute moduleKey="technical_awareness_survey">
-                      <FeatureUnavailable />
+                      <TechnicalSurveyDashboard />
                     </ProtectedRoute>
                   } />
                   
