@@ -15,6 +15,7 @@ import { auditService } from './audit';
 type FlagChangeCallback = (flags: Record<ModuleKey, FeatureFlag>) => void;
 
 const FEATURE_FLAGS_KEY = 'feature_flags';
+const FEATURE_FLAGS_VERSION = 2;
 
 const DEFAULT_FLAGS: Record<ModuleKey, FeatureFlag> = {
   dealer_pcc: {
@@ -26,49 +27,104 @@ const DEFAULT_FLAGS: Record<ModuleKey, FeatureFlag> = {
   },
   api_registration: {
     moduleKey: 'api_registration',
-    enabled: false,
+    enabled: true,
     lastModifiedBy: 'system',
-    lastModifiedAt: new Date().toISOString()
+    lastModifiedAt: new Date().toISOString(),
+    reason: 'Enabled by default'
   },
   mt_meet: {
     moduleKey: 'mt_meet',
-    enabled: false,
+    enabled: true,
     lastModifiedBy: 'system',
-    lastModifiedAt: new Date().toISOString()
+    lastModifiedAt: new Date().toISOString(),
+    reason: 'Enabled by default'
   },
   workshop_survey: {
     moduleKey: 'workshop_survey',
-    enabled: false,
+    enabled: true,
     lastModifiedBy: 'system',
-    lastModifiedAt: new Date().toISOString()
+    lastModifiedAt: new Date().toISOString(),
+    reason: 'Enabled by default'
   },
   warranty_survey: {
     moduleKey: 'warranty_survey',
-    enabled: false,
+    enabled: true,
     lastModifiedBy: 'system',
-    lastModifiedAt: new Date().toISOString()
+    lastModifiedAt: new Date().toISOString(),
+    reason: 'Enabled by default'
   },
   technical_awareness_survey: {
     moduleKey: 'technical_awareness_survey',
-    enabled: false,
+    enabled: true,
     lastModifiedBy: 'system',
-    lastModifiedAt: new Date().toISOString()
+    lastModifiedAt: new Date().toISOString(),
+    reason: 'Enabled by default'
   }
 };
+
 
 class FeatureFlagService {
   private listeners: Set<FlagChangeCallback> = new Set();
 
   constructor() {
-    // Initialize with default flags if not present
-    if (!configStorage.get<FeatureFlagConfig>(FEATURE_FLAGS_KEY)) {
-      configStorage.set(FEATURE_FLAGS_KEY, { flags: DEFAULT_FLAGS });
+    const existing = configStorage.get<FeatureFlagConfig>(FEATURE_FLAGS_KEY);
+
+    if (!existing) {
+      configStorage.set(FEATURE_FLAGS_KEY, { version: FEATURE_FLAGS_VERSION, flags: DEFAULT_FLAGS });
+      return;
+    }
+
+    const existingVersion = existing.version ?? 1;
+
+    // Migrate older configs:
+    // - add missing modules
+    // - apply new defaults ONLY if the flag was never changed by a user (lastModifiedBy === 'system')
+    if (existingVersion < FEATURE_FLAGS_VERSION) {
+      const migratedFlags = { ...(existing.flags || {}) } as Record<ModuleKey, FeatureFlag>;
+
+      (Object.keys(DEFAULT_FLAGS) as ModuleKey[]).forEach((moduleKey) => {
+        const current = existing.flags?.[moduleKey];
+        const nextDefault = DEFAULT_FLAGS[moduleKey];
+
+        if (!current) {
+          migratedFlags[moduleKey] = nextDefault;
+          return;
+        }
+
+        const wasSystemDefault = current.lastModifiedBy === 'system';
+
+        if (wasSystemDefault && current.enabled === false && nextDefault.enabled === true) {
+          migratedFlags[moduleKey] = {
+            ...current,
+            enabled: true,
+            lastModifiedAt: new Date().toISOString(),
+            reason: current.reason ?? 'Updated default'
+          };
+          return;
+        }
+
+        migratedFlags[moduleKey] = current;
+      });
+
+      configStorage.set(FEATURE_FLAGS_KEY, { version: FEATURE_FLAGS_VERSION, flags: migratedFlags });
+      return;
     }
   }
 
+
   private getConfig(): FeatureFlagConfig {
-    return configStorage.get<FeatureFlagConfig>(FEATURE_FLAGS_KEY) || { flags: DEFAULT_FLAGS };
+    const config = configStorage.get<FeatureFlagConfig>(FEATURE_FLAGS_KEY);
+    if (!config?.flags) {
+      return { version: FEATURE_FLAGS_VERSION, flags: DEFAULT_FLAGS };
+    }
+
+    return {
+      version: config.version ?? FEATURE_FLAGS_VERSION,
+      // Ensure any missing keys fall back to defaults (without overriding user choices)
+      flags: { ...DEFAULT_FLAGS, ...config.flags }
+    };
   }
+
 
   private setConfig(config: FeatureFlagConfig): void {
     configStorage.set(FEATURE_FLAGS_KEY, config);

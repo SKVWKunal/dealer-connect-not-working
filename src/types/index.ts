@@ -46,8 +46,14 @@ export interface FeatureFlag {
 }
 
 export interface FeatureFlagConfig {
+  /**
+   * Optional version to allow safe migrations of default flags.
+   * Older persisted configs may not have this field.
+   */
+  version?: number;
   flags: Record<ModuleKey, FeatureFlag>;
 }
+
 
 // PCC Types
 export type PCCStatus = 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'more_info_required';
