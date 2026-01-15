@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { StatCard } from '@/components/ui/stat-card';
 import { mtMeetService } from '@/services/mtMeet';
 import { MTMeetDashboardStats } from '@/types/mtMeet';
-import { Calendar, Users, Star, TrendingUp, Plus } from 'lucide-react';
+import { Calendar, Users, Star, Plus } from 'lucide-react';
 
 export default function MTMeet() {
   const [stats, setStats] = useState<MTMeetDashboardStats | null>(null);
@@ -39,10 +39,10 @@ export default function MTMeet() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Meets" value={stats?.totalMeets || 0} icon={<Calendar className="h-5 w-5" />} />
-        <StatCard title="Upcoming Meets" value={stats?.upcomingMeets || 0} icon={<Calendar className="h-5 w-5" />} trend="up" />
-        <StatCard title="Total Attendees" value={stats?.totalAttendees || 0} icon={<Users className="h-5 w-5" />} />
-        <StatCard title="Avg Rating" value={stats?.averageRating.toFixed(1) || '0'} icon={<Star className="h-5 w-5" />} />
+        <StatCard title="Total Meets" value={stats?.totalMeets || 0} icon={Calendar} />
+        <StatCard title="Upcoming Meets" value={stats?.upcomingMeets || 0} icon={Calendar} trend={{ value: 3, isPositive: true }} />
+        <StatCard title="Total Attendees" value={stats?.totalAttendees || 0} icon={Users} />
+        <StatCard title="Avg Rating" value={stats?.averageRating.toFixed(1) || '0'} icon={Star} />
       </div>
 
       <Card>

@@ -41,10 +41,10 @@ export default function WarrantySurveyDashboard() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Submissions" value={stats?.totalSubmissions || 0} icon={<FileSpreadsheet className="h-5 w-5" />} />
-        <StatCard title="Completion Rate" value={`${(stats?.completionRate || 0).toFixed(1)}%`} icon={<TrendingUp className="h-5 w-5" />} />
-        <StatCard title="Claim Process" value={(stats?.averageSatisfaction.claimProcess || 0).toFixed(1)} icon={<Star className="h-5 w-5" />} />
-        <StatCard title="Overall Satisfaction" value={(stats?.averageSatisfaction.overall || 0).toFixed(1)} icon={<Star className="h-5 w-5" />} />
+        <StatCard title="Total Submissions" value={stats?.totalSubmissions || 0} icon={FileSpreadsheet} />
+        <StatCard title="Completion Rate" value={`${(stats?.completionRate || 0).toFixed(1)}%`} icon={TrendingUp} />
+        <StatCard title="Claim Process" value={(stats?.averageSatisfaction.claimProcess || 0).toFixed(1)} icon={Star} />
+        <StatCard title="Overall Satisfaction" value={(stats?.averageSatisfaction.overall || 0).toFixed(1)} icon={Star} />
       </div>
 
       <Card>
