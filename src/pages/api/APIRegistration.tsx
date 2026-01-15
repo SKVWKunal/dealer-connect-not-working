@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { StatCard } from '@/components/ui/stat-card';
 import { apiRegistrationService } from '@/services/apiRegistration';
 import { EventDashboardStats } from '@/types/apiRegistration';
-import { Calendar, Users, CheckCircle, TrendingUp, Plus } from 'lucide-react';
+import { Calendar, Users, TrendingUp, Plus } from 'lucide-react';
 
 export default function APIRegistration() {
   const [stats, setStats] = useState<EventDashboardStats | null>(null);
@@ -39,10 +39,10 @@ export default function APIRegistration() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Events" value={stats?.totalEvents || 0} icon={<Calendar className="h-5 w-5" />} />
-        <StatCard title="Upcoming Events" value={stats?.upcomingEvents || 0} icon={<Calendar className="h-5 w-5" />} trend="up" />
-        <StatCard title="Total Participants" value={stats?.totalParticipants || 0} icon={<Users className="h-5 w-5" />} />
-        <StatCard title="Attendance Rate" value={`${(stats?.attendanceRate || 0).toFixed(1)}%`} icon={<TrendingUp className="h-5 w-5" />} />
+        <StatCard title="Total Events" value={stats?.totalEvents || 0} icon={Calendar} />
+        <StatCard title="Upcoming Events" value={stats?.upcomingEvents || 0} icon={Calendar} trend={{ value: 5, isPositive: true }} />
+        <StatCard title="Total Participants" value={stats?.totalParticipants || 0} icon={Users} />
+        <StatCard title="Attendance Rate" value={`${(stats?.attendanceRate || 0).toFixed(1)}%`} icon={TrendingUp} />
       </div>
 
       <Card>

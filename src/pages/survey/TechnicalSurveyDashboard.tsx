@@ -41,10 +41,10 @@ export default function TechnicalSurveyDashboard() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Submissions" value={stats?.totalSubmissions || 0} icon={<FileSpreadsheet className="h-5 w-5" />} />
-        <StatCard title="Vehicle Systems" value={(stats?.averageScores.vehicleSystems || 0).toFixed(1)} icon={<Cpu className="h-5 w-5" />} />
-        <StatCard title="Diagnostic Tools" value={(stats?.averageScores.diagnosticTools || 0).toFixed(1)} icon={<Cpu className="h-5 w-5" />} />
-        <StatCard title="New Technology" value={(stats?.averageScores.newTechnology || 0).toFixed(1)} icon={<TrendingUp className="h-5 w-5" />} />
+        <StatCard title="Total Submissions" value={stats?.totalSubmissions || 0} icon={FileSpreadsheet} />
+        <StatCard title="Vehicle Systems" value={(stats?.averageScores.vehicleSystems || 0).toFixed(1)} icon={Cpu} />
+        <StatCard title="Diagnostic Tools" value={(stats?.averageScores.diagnosticTools || 0).toFixed(1)} icon={Cpu} />
+        <StatCard title="New Technology" value={(stats?.averageScores.newTechnology || 0).toFixed(1)} icon={TrendingUp} />
       </div>
 
       <Card>
