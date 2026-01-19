@@ -1,73 +1,106 @@
-# Welcome to your Lovable project
+# Dealer Connect Hub (One Aftersales)
 
-## Project info
+## Overview
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+**Dealer Connect Hub** (also known as **One Aftersales**) is a comprehensive dealer service management platform designed to streamline and centralize various aftersales operations including:
 
-## How can I edit this code?
+- **PCC Submissions** - Manage and submit Pre-Commissioning Certificates
+- **Workshop Surveys** - Conduct and track workshop performance surveys
+- **Warranty Surveys** - Handle warranty-related survey data
+- **API Registrations** - Register and manage API integrations
+- **MT Meets** - Schedule and coordinate Management Team meetings
+- **Technical Awareness** - Share and manage technical documentation and updates
 
-There are several ways of editing your application.
+## Technology Stack
 
-**Use Lovable**
+This project is built with modern web technologies:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- **Vite** - Fast build tool and development server
+- **TypeScript** - Type-safe JavaScript
+- **React** - UI component library
+- **shadcn-ui** - Beautifully designed components
+- **Tailwind CSS** - Utility-first CSS framework
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js (v18 or higher recommended)
+- npm or yarn package manager
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Install Node.js using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) for easy version management.
 
-Follow these steps:
+### Local Development
+
+1. **Clone the repository**
+   ```sh
+   git clone https://github.com/SKVWKunal/dealer-connect-hub.git
+   cd dealer-connect-hub
+   ```
+
+2. **Install dependencies**
+   ```sh
+   npm install
+   ```
+
+3. **Start the development server**
+   ```sh
+   npm run dev
+   ```
+   
+   The application will be available at `http://localhost:8080`
+
+4. **Lint the code**
+   ```sh
+   npm run lint
+   ```
+
+## Build and Deployment
+
+### Production Build
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+npm run build
 ```
 
-**Edit a file directly in GitHub**
+This creates an optimized production build in the `dist` folder.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Preview Production Build
 
-**Use GitHub Codespaces**
+```sh
+npm run preview
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Preview the production build locally before deployment.
 
-## What technologies are used for this project?
+### Development Build
 
-This project is built with:
+```sh
+npm run build:dev
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Create a development build with additional debugging features.
 
-## How can I deploy this project?
+## Project Structure
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+```
+dealer-connect-hub/
+├── src/              # Application source code
+├── public/           # Static assets
+├── dist/             # Production build output
+├── index.html        # HTML entry point
+├── vite.config.ts    # Vite configuration
+├── tailwind.config.ts # Tailwind CSS configuration
+└── package.json      # Project dependencies and scripts
+```
 
-## Can I connect a custom domain to my Lovable project?
+## Contributing
 
-Yes, you can!
+1. Create a feature branch from `main`
+2. Make your changes and commit with descriptive messages
+3. Push your branch and create a pull request
+4. Ensure all tests and linting pass
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## License
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+This project is private and proprietary.
