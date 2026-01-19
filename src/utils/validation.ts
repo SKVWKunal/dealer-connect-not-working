@@ -70,7 +70,7 @@ export const isValidFileSize = (sizeInBytes: number, maxSizeMB: number): boolean
 };
 
 // Required field validation
-export const isRequired = (value: any): boolean => {
+export const isRequired = (value: unknown): boolean => {
   if (value === null || value === undefined) return false;
   if (typeof value === 'string') return value.trim().length > 0;
   if (Array.isArray(value)) return value.length > 0;
@@ -89,14 +89,14 @@ export interface ValidationResult {
 }
 
 // Generic form validator
-export const validateForm = <T extends Record<string, any>>(
+export const validateForm = <T extends Record<string, unknown>>(
   data: T,
-  rules: Record<keyof T, (value: any) => string | null>
+  rules: Record<keyof T, (value: unknown) => string | null>
 ): ValidationResult => {
   const errors: Record<string, string> = {};
   
   for (const [field, validator] of Object.entries(rules)) {
-    const error = (validator as any)(data[field]);
+    const error = validator(data[field as keyof T]);
     if (error) {
       errors[field] = error;
     }

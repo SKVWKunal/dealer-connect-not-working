@@ -16,7 +16,7 @@ interface AuditLogInput {
   action: AuditAction;
   entityId?: string;
   entityType?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   notes?: string;
 }
 

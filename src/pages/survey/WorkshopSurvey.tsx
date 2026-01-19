@@ -443,7 +443,7 @@ export default function WorkshopSurvey() {
                 <Label htmlFor="hardwareModel">Hardware Model Used *</Label>
                 <Select
                   value={formData.odis.hardwareModel}
-                  onValueChange={v => updateOdis('hardwareModel', v as any)}
+                  onValueChange={v => updateOdis('hardwareModel', v)}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -531,7 +531,7 @@ export default function WorkshopSurvey() {
                 label="Desired Enhancements"
                 options={enhancementOptions}
                 value={formData.interactiveDiagnosis.desiredEnhancements}
-                onChange={v => updateInteractive('desiredEnhancements', v as any)}
+                onChange={v => updateInteractive('desiredEnhancements', v)}
               />
 
               <div className="space-y-2">

@@ -2,10 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Volkswagen Design System - Professional Enterprise Theme */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 @layer base {
+  /* Import fonts */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  
   :root {
     /* VW Brand Colors */
     --vw-blue-primary: 214 100% 16%;

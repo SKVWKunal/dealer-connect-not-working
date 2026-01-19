@@ -126,7 +126,7 @@ class APIRegistrationService {
       totalParticipants: participants.length,
       confirmedParticipants: confirmedParticipants.length,
       attendanceRate: participants.length > 0 ? (attendedParticipants.length / participants.length) * 100 : 0,
-      byEventType: byEventType as any,
+      byEventType: byEventType as Record<string, number>,
       byBrand,
       recentRegistrations: participants.slice(-5).reverse()
     };

@@ -11,6 +11,8 @@
  * 4. The interface and usage throughout the app remains the same
  */
 
+import { User, Dealer, PCCSubmission, AccessRequest, AuditLog, APIRegistrationParticipant } from '@/types';
+
 const STORAGE_PREFIX = 'vw_portal_';
 
 export interface StorageService<T> {
@@ -78,12 +80,12 @@ export function createStorageService<T extends { id: string }>(key: string): Sto
 }
 
 // Storage instances for different entities
-export const userStorage = createStorageService<any>('users');
-export const dealerStorage = createStorageService<any>('dealers');
-export const pccStorage = createStorageService<any>('pcc_submissions');
-export const accessRequestStorage = createStorageService<any>('access_requests');
-export const auditStorage = createStorageService<any>('audit_logs');
-export const apiRegistrationStorage = createStorageService<any>('api_registrations');
+export const userStorage = createStorageService<User>('users');
+export const dealerStorage = createStorageService<Dealer>('dealers');
+export const pccStorage = createStorageService<PCCSubmission>('pcc_submissions');
+export const accessRequestStorage = createStorageService<AccessRequest>('access_requests');
+export const auditStorage = createStorageService<AuditLog>('audit_logs');
+export const apiRegistrationStorage = createStorageService<APIRegistrationParticipant>('api_registrations');
 
 // Generic key-value storage for config
 export const configStorage = {

@@ -16,7 +16,7 @@ interface ExportOptions {
 }
 
 class ExportService {
-  private escapeCSVValue(value: any): string {
+  private escapeCSVValue(value: unknown): string {
     if (value === null || value === undefined) return '';
     const stringValue = String(value);
     if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
@@ -25,7 +25,7 @@ class ExportService {
     return stringValue;
   }
 
-  async exportToCSV<T extends Record<string, any>>(
+  async exportToCSV<T extends Record<string, unknown>>(
     data: T[],
     columns: { key: keyof T; header: string }[],
     options: ExportOptions
@@ -66,7 +66,7 @@ class ExportService {
     }
   }
 
-  async exportToExcel<T extends Record<string, any>>(
+  async exportToExcel<T extends Record<string, unknown>>(
     data: T[],
     columns: { key: keyof T; header: string }[],
     options: ExportOptions

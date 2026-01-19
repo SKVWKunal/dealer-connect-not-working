@@ -185,7 +185,7 @@ export interface AuditLog {
   action: AuditAction;
   entityId?: string;
   entityType?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   notes?: string;
   timestamp: string;
   ipAddress?: string;

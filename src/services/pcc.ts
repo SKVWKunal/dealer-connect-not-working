@@ -178,7 +178,7 @@ class PCCService {
     return {
       total,
       byStatus,
-      bySubtopic: bySubtopic as any,
+      bySubtopic: bySubtopic as Record<string, number>,
       approvalRate,
       averageTAT,
       recentSubmissions,
