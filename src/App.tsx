@@ -43,7 +43,7 @@ const App = () => {
           <FeatureFlagProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
+           <BrowserRouter basename="/dealer-connect-not-working">
               <Routes>
                 {/* Public Routes */}
                 <Route path="/login" element={<Login />} />
