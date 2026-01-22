@@ -25,7 +25,7 @@ class ExportService {
     return stringValue;
   }
 
-  async exportToCSV<T extends Record<string, unknown>>(
+  async exportToCSV<T extends object>(
     data: T[],
     columns: { key: keyof T; header: string }[],
     options: ExportOptions
@@ -66,7 +66,7 @@ class ExportService {
     }
   }
 
-  async exportToExcel<T extends Record<string, unknown>>(
+  async exportToExcel<T extends object>(
     data: T[],
     columns: { key: keyof T; header: string }[],
     options: ExportOptions

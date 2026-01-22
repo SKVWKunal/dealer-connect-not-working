@@ -11,7 +11,7 @@
  * 4. The interface and usage throughout the app remains the same
  */
 
-import { User, Dealer, PCCSubmission, AccessRequest, AuditLog, APIRegistrationParticipant } from '@/types';
+import { User, Dealer, PCCSubmission, AccessRequest, AuditLog, APIRegistration } from '@/types';
 
 const STORAGE_PREFIX = 'vw_portal_';
 
@@ -85,7 +85,7 @@ export const dealerStorage = createStorageService<Dealer>('dealers');
 export const pccStorage = createStorageService<PCCSubmission>('pcc_submissions');
 export const accessRequestStorage = createStorageService<AccessRequest>('access_requests');
 export const auditStorage = createStorageService<AuditLog>('audit_logs');
-export const apiRegistrationStorage = createStorageService<APIRegistrationParticipant>('api_registrations');
+export const apiRegistrationStorage = createStorageService<APIRegistration>('api_registrations');
 
 // Generic key-value storage for config
 export const configStorage = {
