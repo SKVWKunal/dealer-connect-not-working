@@ -32,8 +32,10 @@ const queryClient = new QueryClient();
 
 const App = () => {
   useEffect(() => {
-    // Initialize seed data
-    seedData();
+    // Only seed data in development mode
+    if (import.meta.env.DEV) {
+      seedData();
+    }
   }, []);
 
   return (
